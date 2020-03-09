@@ -1,2 +1,2 @@
 # FPL Points Visualizer and Predictor
-A visualization for the Fantasy Premier League
+This web app is a point visualizer for the 2019-2020 Fantasy Premier League season. Combining current points obtained from the FPL API (https://fantasy.premierleague.com/api/entry/{Team_ID}/history/) and using a Double Exponential Smoothing Model to predict future points, this app is the perfect way for players to visualize their progression over FPL gameweeks. Adding up to two additional Team IDs allows players to see how they stack up against their FPL rivals.
