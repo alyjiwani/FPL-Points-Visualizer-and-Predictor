@@ -43,8 +43,8 @@ def make_graph(x11, y11, x12, y12, x21, y21, x22, y22, x31, y31, x32, y32):
     base_graph.add_trace(
         go.Scatter(name="Player 3 - Future", x=x32, y=y32, mode='lines+markers', hoverinfo='x+y',
                    line=dict(color=player3_colour, dash='dash'), marker=dict(symbol='circle', color=player3_colour)))
-    base_graph.update_layout(font=dict(color=font_colour), xaxis_title="Gameweeks", yaxis_title="Points", height=600,
-                             width=1200, margin={'t': 25, 'l': 0, 'r': 0, 'b': 0},
+    base_graph.update_layout(font=dict(color=font_colour), xaxis_title="Gameweeks", yaxis_title="Points",
+                             margin={'t': 25, 'l': 0, 'r': 0, 'b': 0},
                              plot_bgcolor=bg_colour, paper_bgcolor=bg_colour)
     base_graph.update_xaxes(showline=True, linewidth=1, range=[0, 40], linecolor=font_colour, showgrid=False)
     base_graph.update_yaxes(showline=True, linewidth=1, range=[0, 2500], linecolor=font_colour, showgrid=False)
@@ -114,11 +114,12 @@ app.layout = html.Div(children=[
             html.Button('Generate', id='generator', style={'margin-top': 5, 'color': font_colour}),
             html.Div(id='output-container-button-1',
                      children='Enter your Team ID(s) and press Generate', style={'margin-top': 5, 'color': font_colour})
-        ], className='two columns', style={'margin-top': 210}),
+        ], className='two columns', style={'margin-top': '30vh'}),
         html.Div([
             dcc.Graph(
                 id='points-graph',
-                figure=make_graph([], [], [], [], [], [], [], [], [], [], [], [])
+                figure=make_graph([], [], [], [], [], [], [], [], [], [], [], []),
+                style=dict(height='80vh')
             )
         ], className='ten columns')
     ], className='row', style={'text-align': 'center'})
