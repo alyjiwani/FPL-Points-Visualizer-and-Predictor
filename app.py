@@ -122,7 +122,7 @@ app.layout = html.Div(children=[
             )
         ], className='ten columns')
     ], className='row', style={'text-align': 'center'})
-], style=dict(backgroundColor=bg_colour, height='100vh'))
+], style=dict(backgroundColor=bg_colour, height='100vh', width='100vw'))
 
 
 @app.callback(Output('points-graph', 'figure'),
