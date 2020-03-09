@@ -86,6 +86,7 @@ def data_model(team_id):
 
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.title = 'FPL Points Visualizer & Predictor'
 
 server = app.server
 
