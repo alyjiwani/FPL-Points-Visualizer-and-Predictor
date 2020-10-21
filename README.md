@@ -6,9 +6,11 @@ import dash
 ```
 # How to Use It?
 https://fpl-visualizer.herokuapp.com/ \
-Start by entering your Team ID which can be found when viewing your team from the FPL application on your desktop. \
+Start by entering your Team ID which can be found when viewing your team from the FPL application on your desktop.
+
 ![Link](/images/link.png)
-Clicking "Generate" will populate the graph with a line illustrating your current and predicted points cumulative points. \
+
+Clicking "Generate" will populate the graph with a line illustrating your current and predicted points cumulative points.
 ![Example](/images/example.png)
 # The Data Process - Why Double Exponential Smoothing?
 In this section, I want to dive into the model chosen for the prediction aspect of this web app and provide some reasoning as to why it was chosen. 
