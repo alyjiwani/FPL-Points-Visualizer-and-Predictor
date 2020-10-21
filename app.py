@@ -71,10 +71,12 @@ def data_model(team_id):
             current_points.append(week.get("total_points"))
 
     # Model the Data
-    model = statsmodels.tsa.holtwinters.ExponentialSmoothing(current_points, 'add', False, None)
+    model = statsmodels.tsa.holtwinters.ExponentialSmoothing(endog=current_points, trend='additive',
+                                                             damped_trend=False, seasonal=None,
+                                                             initialization_method=None)
 
     # Fit the Model
-    model_fit = model.fit()
+    model_fit = model.fit(smoothing_level=0.4, smoothing_trend=0.45)
 
     # Forecast Data
     forecast = model_fit.forecast(len(gameweeks) - len(current_points))
