@@ -22,8 +22,8 @@ player1_colour = '#e43075'
 player2_colour = '#5dca36'
 player3_colour = '#2474a3'
 
-
 def make_graph(x11, y11, x12, y12, x21, y21, x22, y22, x31, y31, x32, y32):
+    # Create Graph
     base_graph = go.Figure()
     base_graph.add_trace(
         go.Scatter(name="Player 1 - Current", x=x11, y=y11, mode='lines+markers', hoverinfo='x+y',
@@ -46,10 +46,9 @@ def make_graph(x11, y11, x12, y12, x21, y21, x22, y22, x31, y31, x32, y32):
     base_graph.update_layout(font=dict(color=font_colour), xaxis_title="Gameweeks", yaxis_title="Points",
                              margin={'t': 25, 'l': 0, 'r': 0, 'b': 0},
                              plot_bgcolor=bg_colour, paper_bgcolor=bg_colour)
-    base_graph.update_xaxes(showline=True, linewidth=1, range=[0, 40], linecolor=font_colour, showgrid=False)
+    base_graph.update_xaxes(showline=True, linewidth=1, range=[0, 38], linecolor=font_colour, showgrid=False)
     base_graph.update_yaxes(showline=True, linewidth=1, range=[0, 2500], linecolor=font_colour, showgrid=False)
     return base_graph
-
 
 def data_model(team_id):
     # Retrieving Data
@@ -85,7 +84,6 @@ def data_model(team_id):
     plot = [current_points, future_results]
 
     return plot
-
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.title = 'FPL Points Visualizer & Predictor'
@@ -126,7 +124,6 @@ app.layout = html.Div(children=[
         ], className='ten columns')
     ], className='row', style={'text-align': 'center'})
 ], style=dict(backgroundColor=bg_colour, height='100vh', width='100vw'))
-
 
 @app.callback(Output('points-graph', 'figure'),
               [Input('generator', 'n_clicks')],
@@ -173,7 +170,6 @@ def update_graph(clicks, id_1, id_2, id_3):
                                    gameweeks[0: len(plot2[0])], plot2[0], gameweeks[len(plot2[0]):], plot2[1],
                                    gameweeks[0: len(plot3[0])], plot3[0], gameweeks[len(plot3[0]):], plot3[1])
     return updated_graph
-
 
 if __name__ == '__main__':
     app.run_server(debug=True)
