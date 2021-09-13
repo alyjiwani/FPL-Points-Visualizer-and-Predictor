@@ -92,7 +92,7 @@ server = app.server
 
 app.layout = html.Div(children=[
     html.Div([
-        html.H4(children='FPL Points Visualizer & Predictor (2020-2021 Season)',
+        html.H4(children='FPL Points Visualizer & Predictor (2021-2022 Season)',
                 style={'color': font_colour, 'backgroundColor': bg_colour, 'margin-top': 0}),
         html.H6(children="View your past Gameweek Points and see where you may end up by Gameweek 38. "
                          "Add your friends' Team IDs to see how you stack up!",
