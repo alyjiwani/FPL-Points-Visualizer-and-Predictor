@@ -101,7 +101,7 @@ app.layout = html.Div(children=[
                          'click the link ->    ',
                 style={'color': font_colour, 'display': 'inline'}),
         html.A('Github - Aly J.',
-               href='https://github.com/OMGitsAlyJ/FPL-Points-Visualizer-and-Predictor',
+               href='https://github.com/alyjiwani/FPL-Points-Visualizer-and-Predictor',
                style={'color': font_colour, 'font-size': 20})
     ], style={'margin-left': 10}),
     html.Div([
