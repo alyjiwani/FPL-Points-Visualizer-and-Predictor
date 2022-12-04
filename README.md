@@ -5,7 +5,7 @@ This project was written in Python and HTML/CSS and was built using Dash, a fram
 import dash
 ```
 # How to Use It?
-https://fpl-visualizer.herokuapp.com/ \
+https://fplvisualizer.onrender.com/ \
 Start by entering your Team ID which can be found when viewing your team from the FPL application on your desktop.
 
 ![Link](/assets/images/link.png)
