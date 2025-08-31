@@ -1,12 +1,10 @@
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import requests
-import numpy
-import statsmodels
+import numpy as np  # Changed import
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -52,9 +50,8 @@ def make_graph(x11, y11, x12, y12, x21, y21, x22, y22, x31, y31, x32, y32):
 
 def data_model(team_id):
     # Retrieving Data
-    response = requests.get("https://fantasy.premierleague.com/api/entry/{0}/history/".format(team_id))
-
-    if response.status_code == 404:
+    response = requests.get(f"https://fantasy.premierleague.com/api/entry/{team_id}/history/")
+    if response.status_code == 404 or not response.json().get("current"):
         return [false_id, []]
 
     # Add Data into Arrays
@@ -70,19 +67,19 @@ def data_model(team_id):
             current_points.append(week.get("total_points"))
 
     # Model the Data
-    model = statsmodels.tsa.holtwinters.ExponentialSmoothing(endog=current_points, trend='additive',
-                                                             damped_trend=False, seasonal=None,
-                                                             initialization_method=None)
-
-    # Fit the Model
-    model_fit = model.fit(smoothing_level=0.4, smoothing_trend=0.45)
-
-    # Forecast Data
-    forecast = model_fit.forecast(len(gameweeks) - len(current_points))
-    future_results = numpy.round(forecast)
+    try:
+        model = ExponentialSmoothing(
+            endog=current_points, trend='additive',
+            damped_trend=False, seasonal=None,
+            initialization_method='estimated'
+        )
+        model_fit = model.fit(smoothing_level=0.4, smoothing_trend=0.45)
+        forecast = model_fit.forecast(len(gameweeks) - len(current_points))
+        future_results = np.round(forecast)
+    except Exception:
+        future_results = []
 
     plot = [current_points, future_results]
-
     return plot
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -92,7 +89,7 @@ server = app.server
 
 app.layout = html.Div(children=[
     html.Div([
-        html.H4(children='FPL Points Visualizer & Predictor (2022-2023 Season)',
+        html.H4(children='FPL Points Visualizer & Predictor',
                 style={'color': font_colour, 'backgroundColor': bg_colour, 'margin-top': 0}),
         html.H6(children="View your past Gameweek Points and see where you may end up by Gameweek 38. "
                          "Add your friends' Team IDs to see how you stack up!",
@@ -172,4 +169,4 @@ def update_graph(clicks, id_1, id_2, id_3):
     return updated_graph
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run(debug=True)
