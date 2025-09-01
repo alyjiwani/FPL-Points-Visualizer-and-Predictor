@@ -4,67 +4,61 @@ import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import requests
-import numpy as np  # Changed import
+import numpy as np
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-gameweeks = list(range(39))
-false_id = [0] * 39
+num_gameweeks = 39
+num_players = 3
+gameweeks = list(range(num_gameweeks))
+false_id = [0] * num_gameweeks
 
 bg_colour = '#121212'
 font_colour = '#FFFFFF'
-player1_colour = '#e43075'
-player2_colour = '#5dca36'
-player3_colour = '#2474a3'
+player_colours = ['#e43075', '#5dca36', '#2474a3']
 
-def make_graph(x11, y11, x12, y12, x21, y21, x22, y22, x31, y31, x32, y32):
-    # Create Graph
+def make_graph(player_data):
     base_graph = go.Figure()
-    base_graph.add_trace(
-        go.Scatter(name="Player 1 - Current", x=x11, y=y11, mode='lines+markers', hoverinfo='x+y',
-                   line=dict(color=player1_colour, dash='solid'), marker=dict(symbol='circle', color=player1_colour)))
-    base_graph.add_trace(
-        go.Scatter(name="Player 1 - Future", x=x12, y=y12, mode='lines+markers', hoverinfo='x+y',
-                   line=dict(color=player1_colour, dash='dash'), marker=dict(symbol='circle', color=player1_colour)))
-    base_graph.add_trace(
-        go.Scatter(name="Player 2 - Current", x=x21, y=y21, mode='lines+markers', hoverinfo='x+y',
-                   line=dict(color=player2_colour, dash='solid'), marker=dict(symbol='circle', color=player2_colour)))
-    base_graph.add_trace(
-        go.Scatter(name="Player 2 - Future", x=x22, y=y22, mode='lines+markers', hoverinfo='x+y',
-                   line=dict(color=player2_colour, dash='dash'), marker=dict(symbol='circle', color=player2_colour)))
-    base_graph.add_trace(
-        go.Scatter(name="Player 3 - Current", x=x31, y=y31, mode='lines+markers', hoverinfo='x+y',
-                   line=dict(color=player3_colour, dash='solid'), marker=dict(symbol='circle', color=player3_colour)))
-    base_graph.add_trace(
-        go.Scatter(name="Player 3 - Future", x=x32, y=y32, mode='lines+markers', hoverinfo='x+y',
-                   line=dict(color=player3_colour, dash='dash'), marker=dict(symbol='circle', color=player3_colour)))
-    base_graph.update_layout(font=dict(color=font_colour), xaxis_title="Gameweeks", yaxis_title="Points",
-                             margin={'t': 25, 'l': 0, 'r': 0, 'b': 0},
-                             plot_bgcolor=bg_colour, paper_bgcolor=bg_colour)
-    base_graph.update_xaxes(showline=True, linewidth=1, range=[0, 38], linecolor=font_colour, showgrid=False)
+    for i, (current_x, current_y, future_x, future_y) in enumerate(player_data):
+        base_graph.add_trace(
+            go.Scatter(
+                name=f"Player {i+1} - Current",
+                x=current_x, y=current_y, mode='lines+markers', hoverinfo='x+y',
+                line=dict(color=player_colours[i], dash='solid'),
+                marker=dict(symbol='circle', color=player_colours[i])
+            )
+        )
+        base_graph.add_trace(
+            go.Scatter(
+                name=f"Player {i+1} - Future",
+                x=future_x, y=future_y, mode='lines+markers', hoverinfo='x+y',
+                line=dict(color=player_colours[i], dash='dash'),
+                marker=dict(symbol='circle', color=player_colours[i])
+            )
+        )
+    base_graph.update_layout(
+        font=dict(color=font_colour),
+        xaxis_title="Gameweeks",
+        yaxis_title="Points",
+        margin={'t': 25, 'l': 0, 'r': 0, 'b': 0},
+        plot_bgcolor=bg_colour,
+        paper_bgcolor=bg_colour
+    )
+    base_graph.update_xaxes(showline=True, linewidth=1, range=[0, num_gameweeks-1], linecolor=font_colour, showgrid=False)
     base_graph.update_yaxes(showline=True, linewidth=1, range=[0, 2500], linecolor=font_colour, showgrid=False)
     return base_graph
 
 def data_model(team_id):
-    # Retrieving Data
     response = requests.get(f"https://fantasy.premierleague.com/api/entry/{team_id}/history/")
-    if response.status_code == 404 or not response.json().get("current"):
+    data = response.json().get("current", [])
+
+    if response.status_code == 404 or not data:
         return [false_id, []]
-
-    # Add Data into Arrays
-    start_week = response.json()["current"][0].get("event")
-    current_points = [0]
-    if start_week != 1:
-        for x in range(1, start_week):
-            current_points.append(0)
-        for week in response.json()["current"]:
-            current_points.append(week.get("total_points"))
-    else:
-        for week in response.json()["current"]:
-            current_points.append(week.get("total_points"))
-
-    # Model the Data
+    
+    start_week = data[0].get("event", 1)
+    current_points = [0] * (start_week if start_week > 1 else 1)
+    current_points += [week.get("total_points", 0) for week in data]
     try:
         model = ExponentialSmoothing(
             endog=current_points, trend='additive',
@@ -72,17 +66,14 @@ def data_model(team_id):
             initialization_method='estimated'
         )
         model_fit = model.fit(smoothing_level=0.4, smoothing_trend=0.45)
-        forecast = model_fit.forecast(len(gameweeks) - len(current_points))
+        forecast = model_fit.forecast(num_gameweeks - len(current_points))
         future_results = np.round(forecast)
     except Exception:
         future_results = []
-
-    plot = [current_points, future_results]
-    return plot
+    return [current_points, future_results]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.title = 'FPL Points Visualizer & Predictor'
-
 server = app.server
 
 app.layout = html.Div(children=[
@@ -113,7 +104,7 @@ app.layout = html.Div(children=[
         html.Div([
             dcc.Graph(
                 id='points-graph',
-                figure=make_graph([], [], [], [], [], [], [], [], [], [], [], []),
+                figure=make_graph([([], [], [], []) for _ in range(num_players)]),
                 style=dict(height='80vh')
             )
         ], className='ten columns')
@@ -124,47 +115,19 @@ app.layout = html.Div(children=[
               [Input('generator', 'n_clicks')],
               [State('id-1', 'value'), State('id-2', 'value'), State('id-3', 'value')])
 def update_graph(clicks, id_1, id_2, id_3):
-    updated_graph = go.Figure()
-    if id_1 is None and id_2 is None and id_3 is None:
+    ids = [id_1, id_2, id_3]
+    if not any(ids):
         raise PreventUpdate
-    elif id_1 is not None and id_2 is None and id_3 is None:
-        plot1 = data_model(id_1)
-        updated_graph = make_graph(gameweeks[0: len(plot1[0])], plot1[0], gameweeks[len(plot1[0]):], plot1[1],
-                                   [], [], [], [], [], [], [], [])
-    elif id_2 is not None and id_1 is None and id_3 is None:
-        plot2 = data_model(id_2)
-        updated_graph = make_graph([], [], [], [], gameweeks[0: len(plot2[0])], plot2[0],
-                                   gameweeks[len(plot2[0]):], plot2[1], [], [], [], [])
-    elif id_3 is not None and id_1 is None and id_2 is None:
-        plot3 = data_model(id_3)
-        updated_graph = make_graph([], [], [], [], [], [], [], [],
-                                   gameweeks[0: len(plot3[0])], plot3[0], gameweeks[len(plot3[0]):], plot3[1])
-    elif id_1 is not None and id_2 is not None and id_3 is None:
-        plot1 = data_model(id_1)
-        plot2 = data_model(id_2)
-        updated_graph = make_graph(gameweeks[0: len(plot1[0])], plot1[0], gameweeks[len(plot1[0]):], plot1[1],
-                                   gameweeks[0: len(plot2[0])], plot2[0], gameweeks[len(plot2[0]):], plot2[1],
-                                   [], [], [], [])
-    elif id_2 is not None and id_3 is not None and id_1 is None:
-        plot2 = data_model(id_2)
-        plot3 = data_model(id_3)
-        updated_graph = make_graph([], [], [], [],
-                                   gameweeks[0: len(plot2[0])], plot2[0], gameweeks[len(plot2[0]):], plot2[1],
-                                   gameweeks[0: len(plot3[0])], plot3[0], gameweeks[len(plot3[0]):], plot3[1])
-    elif id_1 is not None and id_3 is not None and id_2 is None:
-        plot1 = data_model(id_1)
-        plot3 = data_model(id_3)
-        updated_graph = make_graph(gameweeks[0: len(plot1[0])], plot1[0], gameweeks[len(plot1[0]):], plot1[1],
-                                   [], [], [], [],
-                                   gameweeks[0: len(plot3[0])], plot3[0], gameweeks[len(plot3[0]):], plot3[1])
-    elif id_1 is not None and id_3 is not None and id_2 is not None:
-        plot1 = data_model(id_1)
-        plot2 = data_model(id_2)
-        plot3 = data_model(id_3)
-        updated_graph = make_graph(gameweeks[0: len(plot1[0])], plot1[0], gameweeks[len(plot1[0]):], plot1[1],
-                                   gameweeks[0: len(plot2[0])], plot2[0], gameweeks[len(plot2[0]):], plot2[1],
-                                   gameweeks[0: len(plot3[0])], plot3[0], gameweeks[len(plot3[0]):], plot3[1])
-    return updated_graph
+    player_data = []
+    for idx, team_id in enumerate(ids):
+        if team_id is not None:
+            points, future = data_model(team_id)
+            current_x = gameweeks[:len(points)]
+            future_x = gameweeks[len(points):len(points)+len(future)]
+            player_data.append((current_x, points, future_x, future))
+        else:
+            player_data.append(([], [], [], []))
+    return make_graph(player_data)
 
 if __name__ == '__main__':
     app.run(debug=True)
