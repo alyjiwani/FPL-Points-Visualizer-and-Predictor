@@ -18,12 +18,13 @@ bg_colour = '#121212'
 font_colour = '#FFFFFF'
 player_colours = ['#e43075', '#5dca36', '#2474a3']
 
-def make_graph(player_data):
+def make_graph(player_data, player_names=None):
     base_graph = go.Figure()
     for i, (current_x, current_y, future_x, future_y) in enumerate(player_data):
+        name = player_names[i] if player_names else f"Player {i+1}"
         base_graph.add_trace(
             go.Scatter(
-                name=f"Player {i+1} - Current",
+                name=f"{name} - Current",
                 x=current_x, y=current_y, mode='lines+markers', hoverinfo='x+y',
                 line=dict(color=player_colours[i], dash='solid'),
                 marker=dict(symbol='circle', color=player_colours[i])
@@ -31,7 +32,7 @@ def make_graph(player_data):
         )
         base_graph.add_trace(
             go.Scatter(
-                name=f"Player {i+1} - Future",
+                name=f"{name} - Future",
                 x=future_x, y=future_y, mode='lines+markers', hoverinfo='x+y',
                 line=dict(color=player_colours[i], dash='dash'),
                 marker=dict(symbol='circle', color=player_colours[i])
@@ -72,6 +73,18 @@ def data_model(team_id):
         future_results = []
     return [current_points, future_results]
 
+def get_manager_name(team_id):
+    try:
+        response = requests.get(f"https://fantasy.premierleague.com/api/entry/{team_id}/")
+        data = response.json()
+        first = data.get("player_first_name", "")
+        last = data.get("player_last_name", "")
+        if first or last:
+            return f"{first} {last}".strip()
+    except Exception:
+        pass
+    return f"Player {team_id}"
+
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.title = 'FPL Points Visualizer & Predictor'
 server = app.server
@@ -104,7 +117,7 @@ app.layout = html.Div(children=[
         html.Div([
             dcc.Graph(
                 id='points-graph',
-                figure=make_graph([([], [], [], []) for _ in range(num_players)]),
+                figure=make_graph([([], [], [], []) for _ in range(num_players)], [""]*num_players),
                 style=dict(height='80vh')
             )
         ], className='ten columns')
@@ -119,15 +132,18 @@ def update_graph(clicks, id_1, id_2, id_3):
     if not any(ids):
         raise PreventUpdate
     player_data = []
+    player_names = []
     for idx, team_id in enumerate(ids):
         if team_id is not None:
             points, future = data_model(team_id)
             current_x = gameweeks[:len(points)]
             future_x = gameweeks[len(points):len(points)+len(future)]
             player_data.append((current_x, points, future_x, future))
+            player_names.append(get_manager_name(team_id))
         else:
             player_data.append(([], [], [], []))
-    return make_graph(player_data)
+            player_names.append(f"Player {idx+1}")
+    return make_graph(player_data, player_names)
 
 if __name__ == '__main__':
     app.run(debug=True)
