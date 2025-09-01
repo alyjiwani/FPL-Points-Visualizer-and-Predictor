@@ -65,7 +65,7 @@ def data_model(team_id):
             damped_trend=False, seasonal=None,
             initialization_method='estimated'
         )
-        model_fit = model.fit(smoothing_level=0.4, smoothing_trend=0.45)
+        model_fit = model.fit(optimized=True)
         forecast = model_fit.forecast(num_gameweeks - len(current_points))
         future_results = np.round(forecast)
     except Exception:
