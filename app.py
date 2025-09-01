@@ -7,7 +7,11 @@ import requests
 import numpy as np
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [
+    'https://codepen.io/chriddyp/pen/bWLwgP.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css'
+]
 
 num_gameweeks = 39
 num_players = 3
@@ -25,7 +29,11 @@ def make_graph(player_data, player_names=None):
         base_graph.add_trace(
             go.Scatter(
                 name=f"{name} - Current",
-                x=current_x, y=current_y, mode='lines+markers', hoverinfo='x+y',
+                x=current_x,
+                y=current_y,
+                mode='lines+markers',
+                hoverinfo='text',
+                text=[f"Gameweek: {gw}<br>Points: {pt}" for gw, pt in zip(current_x, current_y)],
                 line=dict(color=player_colours[i], dash='solid'),
                 marker=dict(symbol='circle', color=player_colours[i])
             )
@@ -33,7 +41,11 @@ def make_graph(player_data, player_names=None):
         base_graph.add_trace(
             go.Scatter(
                 name=f"{name} - Future",
-                x=future_x, y=future_y, mode='lines+markers', hoverinfo='x+y',
+                x=future_x,
+                y=future_y,
+                mode='lines+markers',
+                hoverinfo='text',
+                text=[f"Gameweek: {gw}<br>Predicted Points: {int(pt)}" for gw, pt in zip(future_x, future_y)],
                 line=dict(color=player_colours[i], dash='dash'),
                 marker=dict(symbol='circle', color=player_colours[i])
             )
@@ -89,7 +101,8 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.title = 'FPL Points Visualizer & Predictor'
 server = app.server
 
-app.layout = html.Div(children=[
+app.layout = html.Div(
+    children=[
     html.Div([
         html.H4(children='FPL Points Visualizer & Predictor',
                 style={'color': font_colour, 'backgroundColor': bg_colour, 'margin-top': 0}),
@@ -122,7 +135,7 @@ app.layout = html.Div(children=[
             )
         ], className='ten columns')
     ], className='row', style={'text-align': 'center'})
-], style=dict(backgroundColor=bg_colour, height='100vh', width='100vw'))
+], style=dict(backgroundColor=bg_colour, minHeight='100vh', width='100vw'))
 
 @app.callback(Output('points-graph', 'figure'),
               [Input('generator', 'n_clicks')],
