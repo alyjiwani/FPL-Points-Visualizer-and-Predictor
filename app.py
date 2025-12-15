@@ -112,7 +112,7 @@ app.layout = html.Div(
         html.H6(children='For more information about the statistical model used and source code for the app, '
                          'click the link ->    ',
                 style={'color': font_colour, 'display': 'inline'}),
-        html.A('Github',
+        html.A('GitHub',
                href='https://github.com/alyjiwani/FPL-Points-Visualizer-and-Predictor',
                style={'color': font_colour})
     ], style={'margin-left': 10}),
